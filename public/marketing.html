@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SimplySend - Marketing Email Tester</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="background-decor">
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+  </div>
+
+  <div class="container">
+    <h1 class="page-title">Hello Simply Send!</h1>
+    <header class="app-header">
+      <div class="logo-wrapper">
+        <img src="/logo.png" alt="SimplySend Logo" class="logo">
+        <span class="logo-text">SimplySend</span>
+        <span class="badge">SANDBOX</span>
+      </div>
+      <nav class="navigation-tabs">
+        <a href="/" class="nav-tab">Transactional Send</a>
+        <a href="/marketing.html" class="nav-tab active">Marketing Send</a>
+      </nav>
+    </header>
+
+    <main class="card glass">
+      <div class="card-header">
+        <h2>Marketing Email Dispatch (mapi)</h2>
+        <p class="subtitle">Bulk campaigns, updates, newsletters, or marketing subscription sends</p>
+      </div>
+
+      <form id="sendForm" class="styled-form">
+        <!-- Payload Segment -->
+        <div class="form-section">
+          <h3>Email Parameters</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="from">Sender Address (From)</label>
+              <input type="email" id="from" placeholder="newsletter@yourverifieddomain.com" required>
+            </div>
+            <div class="form-group">
+              <label for="to">Recipient Address (To)</label>
+              <input type="email" id="to" placeholder="subscriber@example.com" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="subject">Email Subject</label>
+              <input type="text" id="subject" value="Test Marketing Campaign - Hello World" placeholder="June updates are here!" required>
+            </div>
+            <div class="form-group">
+              <label for="subscriptionGroupId">Subscription Group ID <span class="required-star">*</span></label>
+              <input type="text" id="subscriptionGroupId" placeholder="sub_group_12345" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="html">HTML Content</label>
+            <textarea id="html" rows="8" required><div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333333; line-height: 1.6;">
+  <h1 style="font-size: 24px; font-weight: 700; color: #111827; margin-bottom: 16px;">Hello World!</h1>
+  <p style="font-size: 16px; margin-bottom: 24px;">Check out our latest campaign updates from SimplySend.</p>
+  <p style="font-size: 14px; margin-bottom: 30px;">We are excited to share new features and updates designed to streamline your email sending workflow and improve deliverability.</p>
+  <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; font-size: 12px; color: #6b7280; line-height: 1.5;">
+    {{company_address_html}}
+    <br>
+    {{unsubscribe_email_html}}
+  </div>
+</div></textarea>
+          </div>
+          <div class="form-group">
+            <label for="text">Plain Text Fallback <span class="tag">Optional</span></label>
+            <textarea id="text" rows="4">Hello World!
+Check out our latest campaign updates from SimplySend.</textarea>
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="enableClickTracking">
+              <span>Enable Click Redirection Tracking</span>
+            </label>
+          </div>
+        </div>
+
+        <button type="submit" id="submitBtn" class="submit-button btn-marketing">
+          <span class="btn-text">Send Marketing Campaign</span>
+          <span class="spinner hidden"></span>
+        </button>
+
+        <!-- Alert panel -->
+        <div id="alertBox" class="alert-box hidden">
+          <div class="alert-content">
+            <div class="alert-icon"></div>
+            <div class="alert-text">
+              <h4 class="alert-title">Status Title</h4>
+              <p class="alert-message">Status description details...</p>
+              <pre id="errorDetails" class="details-panel hidden"></pre>
+            </div>
+          </div>
+        </div>
+      </form>
+    </main>
+  </div>
+
+  <script>
+    const form = document.getElementById('sendForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = submitBtn.querySelector('.btn-text');
+    const spinner = submitBtn.querySelector('.spinner');
+    const alertBox = document.getElementById('alertBox');
+    const errorDetails = document.getElementById('errorDetails');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // Reset state
+      alertBox.className = 'alert-box hidden';
+      errorDetails.className = 'details-panel hidden';
+      submitBtn.disabled = true;
+      btnText.textContent = 'Sending campaign...';
+      spinner.classList.remove('hidden');
+
+      const payload = {
+        from: document.getElementById('from').value.trim(),
+        to: document.getElementById('to').value.trim(),
+        subject: document.getElementById('subject').value.trim(),
+        html: document.getElementById('html').value.trim(),
+        subscriptionGroupId: document.getElementById('subscriptionGroupId').value.trim(),
+        text: document.getElementById('text').value.trim(),
+        enableClickTracking: document.getElementById('enableClickTracking').checked
+      };
+
+      try {
+        const response = await fetch('/api/send/marketing', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showAlert('success', 'Marketing Send Successful!', `Message ID: ${data.messageId || 'N/A'}`);
+          errorDetails.textContent = JSON.stringify(data, null, 2);
+          errorDetails.classList.remove('hidden');
+          form.reset();
+        } else {
+          showAlert('error', 'Failed to Send Campaign', data.error || 'Server responded with an error.');
+          errorDetails.textContent = JSON.stringify(data, null, 2);
+          errorDetails.classList.remove('hidden');
+        }
+      } catch (err) {
+        showAlert('error', 'Network/Request Failed', err.message || 'Could not connect to test server.');
+      } finally {
+        submitBtn.disabled = false;
+        btnText.textContent = 'Send Marketing Campaign';
+        spinner.classList.add('hidden');
+      }
+    });
+
+    function showAlert(type, title, message) {
+      alertBox.className = `alert-box alert-${type}`;
+      alertBox.querySelector('.alert-title').textContent = title;
+      alertBox.querySelector('.alert-message').textContent = message;
+    }
+  </script>
+</body>
+</html>
