@@ -26,7 +26,14 @@ A clean, premium, glassmorphic Node.js web application designed to test both the
 
 ## Setup & Execution
 
-### 1. Configure Settings
+### 1. Clone the Repository
+Clone the repository to your local development machine:
+```bash
+git clone https://github.com/simply-invent-labs/simply-send-sample-app.git
+cd simply-send-sample-app
+```
+
+### 2. Configure Settings
 Create a `.env` file in the root of the project folder:
 ```bash
 cp .env.example .env
@@ -40,21 +47,21 @@ SIMPLYSEND_MAPI_KEY=your_marketing_api_key_here
 PORT=3005
 ```
 
-### 2. Install Dependencies
+### 3. Install Dependencies
 Install Express and link the local Node.js SDK:
 ```bash
 npm install
 ```
 
-### 3. Start the Server
+### 4. Start the Server
 Start the development server:
 ```bash
 npm start
 ```
 
 Open your browser and navigate to:
-- **Transactional Tester**: [http://localhost:3005](http://localhost:3005)
-- **Marketing Tester**: [http://localhost:3005/marketing.html](http://localhost:3005/marketing.html)
+- **Transactional Tester**: [http://localhost:3000](http://localhost:3000)
+- **Marketing Tester**: [http://localhost:3000/marketing.html](http://localhost:3000/marketing.html)
 
 ---
 
