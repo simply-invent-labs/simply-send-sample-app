@@ -106,10 +106,10 @@ app.post('/api/send/transactional', async (req, res) => {
   try {
     const client = new SimplySendTransactionalClient({
       accountId: resolvedAccountId,
-      tapiKey: resolvedTapi
+      apiKey: resolvedTapi
     });
 
-    const response = await client.send({
+    const response = await client.email.send({
       from,
       to,
       subject,
@@ -136,6 +136,7 @@ app.post('/api/send/transactional', async (req, res) => {
   }
 });
 
+
 /**
  * Endpoint to send Marketing Emails (mapi)
  */
@@ -161,10 +162,10 @@ app.post('/api/send/marketing', async (req, res) => {
   try {
     const client = new SimplySendMarketingClient({
       accountId: resolvedAccountId,
-      mapiKey: resolvedMapi
+      apiKey: resolvedMapi
     });
 
-    const response = await client.send({
+    const response = await client.email.send({
       from,
       to,
       subject,
@@ -190,6 +191,7 @@ app.post('/api/send/marketing', async (req, res) => {
     return res.status(500).json({ error: error.message || 'Internal server error occurred.' });
   }
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
