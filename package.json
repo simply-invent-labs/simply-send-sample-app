@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "express": "^5.2.1",
-    "simplysend": "^3.0.0"
+    "simplysend": "^3.1.0"
   },
   "private": true
 }
