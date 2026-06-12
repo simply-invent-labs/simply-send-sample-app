@@ -2,9 +2,31 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import crypto from 'crypto';
+
+/**
+ * Computes the secure MD5 contactIdentifier format required by SimplySend SDK: channel:md5(normalizedValue)
+ */
+function getContactIdentifier(input) {
+  if (typeof input !== 'string') return '';
+  const val = input.trim();
+  if (val.startsWith('email_') || val.startsWith('phone_')) {
+    return val; // already a secure identifier
+  }
+  if (val.includes('@')) {
+    const hashed = crypto.createHash('md5').update(val.toLowerCase()).digest('hex');
+    return `email_${hashed}`;
+  }
+  // assume phone
+  const cleanPhone = val.replace(/[\s().-]/g, '');
+  const hashed = crypto.createHash('md5').update(cleanPhone).digest('hex');
+  return `phone_${hashed}`;
+}
+
 import {
   SimplySendTransactionalClient,
   SimplySendMarketingClient,
+  SimplySendWebSetupClient,
   SimplySendHttpError,
   SimplySendValidationError
 } from 'simplysend';
@@ -54,7 +76,7 @@ const ipRequestLog = new Map();
 app.use('/api/', (req, res, next) => {
   const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
   const now = Date.now();
-  const limit = 30;
+  const limit = 60; // Increased to 60 for local testing and developer ease
   const windowMs = 60000;
 
   if (!ipRequestLog.has(ip)) {
@@ -82,6 +104,235 @@ function isValidEmail(email) {
 app.use(express.static(path.join(__dirname, 'public')));
 
 /**
+ * Helper to instantiate SimplySendWebSetupClient using env credentials
+ */
+function getWebSetupClient() {
+  const resolvedAccountId = process.env.SIMPLYSEND_ACCOUNT_ID;
+  const resolvedWapi = process.env.SIMPLYSEND_WAPI_KEY;
+  const resolvedWapiUrl = process.env.SIMPLYSEND_WAPI_URL;
+
+  if (!resolvedAccountId) {
+    throw new Error('Server configuration error: SIMPLYSEND_ACCOUNT_ID environment variable is missing.');
+  }
+  if (!resolvedWapi) {
+    throw new Error('Server configuration error: SIMPLYSEND_WAPI_KEY environment variable is missing.');
+  }
+
+  return new SimplySendWebSetupClient({
+    accountId: resolvedAccountId,
+    apiKey: resolvedWapi,
+    ...(resolvedWapiUrl && { baseUrl: resolvedWapiUrl })
+  });
+}
+
+/**
+ * Endpoints for Contacts Directory
+ */
+  app.get('/api/contacts', async (req, res) => {
+  try {
+    const client = getWebSetupClient();
+    const { limit, search, status, lastKey } = req.query;
+    const response = await client.contacts.listContacts({
+      ...(limit && { limit: parseInt(limit) }),
+      ...(search && { search }),
+      ...(status && { status }),
+      ...(lastKey && { lastKey })
+    });
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error('List contacts failed:', error);
+    if (error instanceof SimplySendValidationError) {
+      return res.status(400).json({ error: `Validation Error (${error.field}): ${error.message}` });
+    }
+    if (error instanceof SimplySendHttpError) {
+      return res.status(error.statusCode).json({ error: error.message, reasonCode: error.reasonCode, details: error.data });
+    }
+    return res.status(500).json({ error: error.message || 'Internal server error.' });
+  }
+});
+
+app.get('/api/contacts/:email', async (req, res) => {
+  try {
+    const client = getWebSetupClient();
+    const { email } = req.params;
+    const contactIdentifier = getContactIdentifier(email);
+    const response = await client.contacts.getContact(contactIdentifier);
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error('Get contact failed:', error);
+    if (error instanceof SimplySendValidationError) {
+      return res.status(400).json({ error: `Validation Error (${error.field}): ${error.message}` });
+    }
+    if (error instanceof SimplySendHttpError) {
+      return res.status(error.statusCode).json({ error: error.message, reasonCode: error.reasonCode, details: error.data });
+    }
+    return res.status(500).json({ error: error.message || 'Internal server error.' });
+  }
+});
+
+app.post('/api/contacts', async (req, res) => {
+  try {
+    const client = getWebSetupClient();
+    const { email, firstName, lastName, phone, globalStatus, consentMethod, consentProof, metadata } = req.body;
+    if (!email || !isValidEmail(email)) {
+      return res.status(400).json({ error: 'Invalid or missing email address.' });
+    }
+    const contactIdentifier = getContactIdentifier(email);
+    const response = await client.contacts.updateContact(contactIdentifier, {
+      email,
+      ...(firstName !== undefined && { firstName }),
+      ...(lastName !== undefined && { lastName }),
+      ...(phone !== undefined && { phone }),
+      ...(globalStatus !== undefined && { globalStatus }),
+      ...(consentMethod !== undefined && { consentMethod }),
+      ...(consentProof !== undefined && { consentProof }),
+      ...(metadata !== undefined && { metadata })
+    });
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error('Create/Update contact failed:', error);
+    if (error instanceof SimplySendValidationError) {
+      return res.status(400).json({ error: `Validation Error (${error.field}): ${error.message}` });
+    }
+    if (error instanceof SimplySendHttpError) {
+      return res.status(error.statusCode).json({ error: error.message, reasonCode: error.reasonCode, details: error.data });
+    }
+    return res.status(500).json({ error: error.message || 'Internal server error.' });
+  }
+});
+
+app.delete('/api/contacts/:email', async (req, res) => {
+  try {
+    const client = getWebSetupClient();
+    const { email } = req.params;
+    const contactIdentifier = getContactIdentifier(email);
+    const response = await client.contacts.deleteContact(contactIdentifier);
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error('Delete contact failed:', error);
+    if (error instanceof SimplySendValidationError) {
+      return res.status(400).json({ error: `Validation Error (${error.field}): ${error.message}` });
+    }
+    if (error instanceof SimplySendHttpError) {
+      return res.status(error.statusCode).json({ error: error.message, reasonCode: error.reasonCode, details: error.data });
+    }
+    return res.status(500).json({ error: error.message || 'Internal server error.' });
+  }
+});
+
+/**
+ * Endpoints for Subscription Groups (lists)
+ */
+app.get('/api/groups', async (req, res) => {
+  try {
+    const client = getWebSetupClient();
+    const response = await client.contacts.listSubscriberGroups();
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error('List subscription groups failed:', error);
+    if (error instanceof SimplySendHttpError) {
+      return res.status(error.statusCode).json({ error: error.message, reasonCode: error.reasonCode, details: error.data });
+    }
+    return res.status(500).json({ error: error.message || 'Internal server error.' });
+  }
+});
+
+app.post('/api/groups', async (req, res) => {
+  try {
+    const client = getWebSetupClient();
+    const { name, description } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: 'Subscription Group Name (name) is required.' });
+    }
+    const response = await client.contacts.createSubscriberGroup({ name, description });
+    return res.status(201).json(response);
+  } catch (error) {
+    console.error('Create subscription group failed:', error);
+    if (error instanceof SimplySendValidationError) {
+      return res.status(400).json({ error: `Validation Error (${error.field}): ${error.message}` });
+    }
+    if (error instanceof SimplySendHttpError) {
+      return res.status(error.statusCode).json({ error: error.message, reasonCode: error.reasonCode, details: error.data });
+    }
+    return res.status(500).json({ error: error.message || 'Internal server error.' });
+  }
+});
+
+/**
+ * Endpoints for Subscribers (Group Memberships)
+ */
+app.get('/api/groups/:groupId/subscribers', async (req, res) => {
+  try {
+    const client = getWebSetupClient();
+    const { groupId } = req.params;
+    const { limit, search, isActive, lastKey } = req.query;
+    const response = await client.contacts.listSubscribers(groupId, {
+      ...(limit && { limit: parseInt(limit) }),
+      ...(search && { search }),
+      ...(isActive !== undefined && { isActive }),
+      ...(lastKey && { lastKey })
+    });
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error('List subscribers failed:', error);
+    if (error instanceof SimplySendValidationError) {
+      return res.status(400).json({ error: `Validation Error (${error.field}): ${error.message}` });
+    }
+    if (error instanceof SimplySendHttpError) {
+      return res.status(error.statusCode).json({ error: error.message, reasonCode: error.reasonCode, details: error.data });
+    }
+    return res.status(500).json({ error: error.message || 'Internal server error.' });
+  }
+});
+
+app.post('/api/groups/:groupId/subscribers', async (req, res) => {
+  try {
+    const client = getWebSetupClient();
+    const { groupId } = req.params;
+    const { email, isActive, consentMethod, consentProof } = req.body;
+    if (!email || !isValidEmail(email)) {
+      return res.status(400).json({ error: 'Invalid or missing email address.' });
+    }
+    const contactIdentifier = getContactIdentifier(email);
+    const response = await client.contacts.addSubscriber(groupId, contactIdentifier, {
+      email,
+      isActive: isActive !== false,
+      ...(consentMethod && { consentMethod }),
+      ...(consentProof && { consentProof })
+    });
+    return res.status(201).json(response);
+  } catch (error) {
+    console.error('Add subscriber failed:', error);
+    if (error instanceof SimplySendValidationError) {
+      return res.status(400).json({ error: `Validation Error (${error.field}): ${error.message}` });
+    }
+    if (error instanceof SimplySendHttpError) {
+      return res.status(error.statusCode).json({ error: error.message, reasonCode: error.reasonCode, details: error.data });
+    }
+    return res.status(500).json({ error: error.message || 'Internal server error.' });
+  }
+});
+
+app.delete('/api/groups/:groupId/subscribers/:email', async (req, res) => {
+  try {
+    const client = getWebSetupClient();
+    const { groupId, email } = req.params;
+    const contactIdentifier = getContactIdentifier(email);
+    const response = await client.contacts.deleteSubscriber(groupId, contactIdentifier);
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error('Delete subscriber failed:', error);
+    if (error instanceof SimplySendValidationError) {
+      return res.status(400).json({ error: `Validation Error (${error.field}): ${error.message}` });
+    }
+    if (error instanceof SimplySendHttpError) {
+      return res.status(error.statusCode).json({ error: error.message, reasonCode: error.reasonCode, details: error.data });
+    }
+    return res.status(500).json({ error: error.message || 'Internal server error.' });
+  }
+});
+
+/**
  * Endpoint to send Transactional Emails (tapi)
  */
 app.post('/api/send/transactional', async (req, res) => {
@@ -104,9 +355,11 @@ app.post('/api/send/transactional', async (req, res) => {
   }
 
   try {
+    const resolvedTapiUrl = process.env.SIMPLYSEND_TAPI_URL;
     const client = new SimplySendTransactionalClient({
       accountId: resolvedAccountId,
-      apiKey: resolvedTapi
+      apiKey: resolvedTapi,
+      ...(resolvedTapiUrl && { baseUrl: resolvedTapiUrl })
     });
 
     const response = await client.email.send({
@@ -160,9 +413,11 @@ app.post('/api/send/marketing', async (req, res) => {
   }
 
   try {
+    const resolvedMapiUrl = process.env.SIMPLYSEND_MAPI_URL;
     const client = new SimplySendMarketingClient({
       accountId: resolvedAccountId,
-      apiKey: resolvedMapi
+      apiKey: resolvedMapi,
+      ...(resolvedMapiUrl && { baseUrl: resolvedMapiUrl })
     });
 
     const response = await client.email.send({

@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SimplySend - Contacts & Groups Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* Premium Dashboard Grid Layout */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      margin-top: 24px;
+    }
+    
+    @media(min-width: 1024px) {
+      .dashboard-grid {
+        grid-template-columns: 1.2fr 1fr;
+      }
+      .container {
+        max-width: 1200px;
+      }
+    }
+
+    .flex-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #3b82f6;
+    }
+
+    .btn-purple {
+      background: #6d28d9;
+      color: white;
+    }
+    .btn-purple:hover {
+      background: #7c3aed;
+    }
+
+    .btn-danger-outline {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+    }
+    .btn-danger-outline:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    /* Table & List styling */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 12px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .data-table th, .data-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .data-table th {
+      color: #9ca3af;
+      font-weight: 600;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .data-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .clickable-row {
+      cursor: pointer;
+    }
+
+    .clickable-row:hover td {
+      background: rgba(255, 255, 255, 0.04) !important;
+    }
+
+    .active-row td {
+      background: rgba(99, 102, 241, 0.15) !important;
+      border-bottom-color: rgba(99, 102, 241, 0.3);
+    }
+
+    /* Badges */
+    .status-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .status-active {
+      background: rgba(52, 211, 153, 0.1);
+      color: #34d399;
+      border: 1px solid rgba(52, 211, 153, 0.2);
+    }
+
+    .status-unsubscribed {
+      background: rgba(251, 191, 36, 0.1);
+      color: #fbbf24;
+      border: 1px solid rgba(251, 191, 36, 0.2);
+    }
+
+    .status-bounced, .status-failed {
+      background: rgba(248, 113, 113, 0.1);
+      color: #f87171;
+      border: 1px solid rgba(248, 113, 113, 0.2);
+    }
+
+    /* Search and Filters */
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .search-input {
+      flex: 1;
+      background: rgba(10, 15, 25, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: white;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: #3b82f6;
+    }
+
+    /* Premium Overlay Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85); /* Black overlay matching dark theme guidelines */
+      z-index: 100;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(8px);
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-window {
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      width: 100%;
+      max-width: 500px;
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      transform: translateY(-20px);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .modal-overlay.active .modal-window {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 12px;
+    }
+
+    .modal-header h3 {
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ffffff 40%, #93c5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: #9ca3af;
+      font-size: 20px;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+
+    .close-btn:hover {
+      color: white;
+    }
+
+    .empty-state {
+      padding: 30px;
+      text-align: center;
+      color: #6b7280;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="background-decor">
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+  </div>
+
+  <div class="container">
+    <h1 class="page-title">Hello Simply Send!</h1>
+    <header class="app-header">
+      <div class="logo-wrapper">
+        <img src="/logo.png" alt="SimplySend Logo" class="logo">
+        <span class="logo-text">SimplySend</span>
+        <span class="badge">SANDBOX</span>
+      </div>
+      <nav class="navigation-tabs">
+        <a href="/" class="nav-tab">Transactional Send</a>
+        <a href="/marketing.html" class="nav-tab">Marketing Send</a>
+        <a href="/contacts.html" class="nav-tab active">Contacts & Groups</a>
+      </nav>
+    </header>
+
+    <div class="dashboard-grid">
+      <!-- PANEL A: Contacts Directory -->
+      <section class="card glass">
+        <div class="flex-header">
+          <div>
+            <h2>Contacts Directory</h2>
+            <p class="subtitle">System-wide list of verified audience contacts</p>
+          </div>
+          <button class="btn-small btn-primary" onclick="openContactModal()">+ Add Contact</button>
+        </div>
+
+        <div class="filter-bar">
+          <input type="text" id="contactSearch" class="search-input" placeholder="Search by email prefix..." oninput="loadContacts()">
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="contactsTableBody">
+              <tr>
+                <td colspan="4" class="empty-state">Loading contacts...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- PANEL B: Subscription Groups & Subscribers -->
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Panel B1: Groups -->
+        <section class="card glass">
+          <div class="flex-header">
+            <div>
+              <h2>Subscription Groups</h2>
+              <p class="subtitle">Marketing list segments</p>
+            </div>
+            <button class="btn-small btn-purple" onclick="openGroupModal()">+ Add Group</button>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Group Name</th>
+                  <th>List ID</th>
+                </tr>
+              </thead>
+              <tbody id="groupsTableBody">
+                <tr>
+                  <td colspan="2" class="empty-state">Loading subscription groups...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Panel B2: Group Subscribers -->
+        <section class="card glass">
+          <div class="flex-header">
+            <div>
+              <h2 id="selectedGroupTitle">Group Subscribers</h2>
+              <p class="subtitle" id="selectedGroupSubtitle">Select a subscription group above to view memberships</p>
+            </div>
+            <button id="addSubscriberBtn" class="btn-small btn-primary hidden" onclick="openSubscribeModal()">+ Subscribe</button>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Subscriber Email</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="subscribersTableBody">
+                <tr>
+                  <td colspan="3" class="empty-state">No group selected. Please click on a group above to load subscribers.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- 1. Add/Edit Contact Modal -->
+  <div id="contactModal" class="modal-overlay">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 id="contactModalTitle">Add Global Contact</h3>
+        <button class="close-btn" onclick="closeContactModal()">&times;</button>
+      </div>
+      <form id="contactForm" class="styled-form" onsubmit="saveContact(event)">
+        <div class="form-group">
+          <label for="contactEmail">Email Address <span class="required-star">*</span></label>
+          <input type="email" id="contactEmail" required placeholder="user@example.com">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="contactFirstName">First Name</label>
+            <input type="text" id="contactFirstName" placeholder="John">
+          </div>
+          <div class="form-group">
+            <label for="contactLastName">Last Name</label>
+            <input type="text" id="contactLastName" placeholder="Doe">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="contactPhone">Phone Number</label>
+            <input type="text" id="contactPhone" placeholder="+1234567890">
+          </div>
+          <div class="form-group">
+            <label for="contactStatus">Global Status</label>
+            <select id="contactStatus" class="search-input" style="background-color: rgba(10, 15, 25, 0.6);">
+              <option value="active">Active</option>
+              <option value="unsubscribed">Unsubscribed</option>
+              <option value="bounced">Bounced</option>
+              <option value="complained">Complained</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="contactConsentMethod">Consent Method <span class="required-star">*</span></label>
+            <select id="contactConsentMethod" class="search-input" style="background-color: rgba(10, 15, 25, 0.6);" required>
+              <option value="single_opt_in" selected>Single Opt-In (Form/Checkbox)</option>
+              <option value="double_opt_in">Double Opt-In (Verification Link)</option>
+              <option value="imported">Imported (CSV upload)</option>
+              <option value="web_form">Web Form Signup</option>
+              <option value="implicit_api">Implicit API Creation</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="contactConsentProof">Consent Proof Details <span class="required-star">*</span></label>
+            <input type="text" id="contactConsentProof" placeholder="API registration trigger" required value="Sandbox Web UI Submission">
+          </div>
+        </div>
+        <button type="submit" class="submit-button">Save Contact</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Add Group Modal -->
+  <div id="groupModal" class="modal-overlay">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>Create Subscription Group</h3>
+        <button class="close-btn" onclick="closeGroupModal()">&times;</button>
+      </div>
+      <form id="groupForm" class="styled-form" onsubmit="saveGroup(event)">
+        <div class="form-group">
+          <label for="groupName">Group Name <span class="required-star">*</span></label>
+          <input type="text" id="groupName" required placeholder="Newsletter List">
+        </div>
+        <div class="form-group">
+          <label for="groupDescription">Description</label>
+          <textarea id="groupDescription" rows="3" placeholder="Monthly newsletter audience"></textarea>
+        </div>
+        <button type="submit" class="submit-button btn-marketing">Create Group</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. Subscribe Contact Modal -->
+  <div id="subscribeModal" class="modal-overlay">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>Subscribe Contact to Group</h3>
+        <button class="close-btn" onclick="closeSubscribeModal()">&times;</button>
+      </div>
+      <form id="subscribeForm" class="styled-form" onsubmit="saveSubscriber(event)">
+        <div class="form-group">
+          <label for="subEmail">Contact Email <span class="required-star">*</span></label>
+          <select id="subEmail" class="search-input" style="background-color: rgba(10, 15, 25, 0.6);" required>
+            <option value="">-- Select a Contact --</option>
+          </select>
+          <p class="subtitle" style="font-size: 11px; margin-top: 4px;">Contacts must exist globally in the directory before you can subscribe them.</p>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="subConsentMethod">Consent Method</label>
+            <select id="subConsentMethod" class="search-input" style="background-color: rgba(10, 15, 25, 0.6);">
+              <option value="single_opt_in" selected>Single Opt-In</option>
+              <option value="double_opt_in">Double Opt-In</option>
+              <option value="imported">Imported</option>
+              <option value="web_form">Web Form</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="subConsentProof">Consent Proof</label>
+            <input type="text" id="subConsentProof" value="Subscription join request" placeholder="Checkbox verified">
+          </div>
+        </div>
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="subIsActive" checked>
+            <span>Set Status to Active immediately</span>
+          </label>
+        </div>
+        <button type="submit" class="submit-button">Subscribe Contact</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Selected states
+    let selectedGroupId = null;
+    let selectedGroupName = '';
+
+    // Page Load initializer
+    window.addEventListener('DOMContentLoaded', () => {
+      loadContacts();
+      loadGroups();
+    });
+
+    // Helper: Toast alerts
+    function showToast(type, message) {
+      // Simple and elegant custom browser notification alert
+      const style = type === 'success' ? 'background: #064e3b; color: #34d399; border: 1px solid #059669;' : 'background: #7f1d1d; color: #f87171; border: 1px solid #dc2626;';
+      const toastEl = document.createElement('div');
+      toastEl.setAttribute('style', `position: fixed; bottom: 24px; right: 24px; padding: 16px 24px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 1000; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); transition: all 0.3s ease; transform: translateY(100px); opacity: 0; ${style}`);
+      toastEl.textContent = message;
+      document.body.appendChild(toastEl);
+      
+      // Animate in
+      setTimeout(() => {
+        toastEl.style.transform = 'translateY(0)';
+        toastEl.style.opacity = '1';
+      }, 50);
+
+      // Dismiss after 4 seconds
+      setTimeout(() => {
+        toastEl.style.transform = 'translateY(100px)';
+        toastEl.style.opacity = '0';
+        setTimeout(() => toastEl.remove(), 300);
+      }, 4000);
+    }
+
+    // Modal Control wrappers
+    function openContactModal(email = '', firstName = '', lastName = '', phone = '', status = 'active') {
+      document.getElementById('contactForm').reset();
+      const isEdit = !!email;
+      
+      document.getElementById('contactModalTitle').textContent = isEdit ? 'Edit Global Contact' : 'Add Global Contact';
+      document.getElementById('contactEmail').value = email;
+      document.getElementById('contactEmail').disabled = isEdit;
+      
+      if (isEdit) {
+        document.getElementById('contactFirstName').value = firstName || '';
+        document.getElementById('contactLastName').value = lastName || '';
+        document.getElementById('contactPhone').value = phone || '';
+        document.getElementById('contactStatus').value = status || 'active';
+      }
+      
+      document.getElementById('contactModal').classList.add('active');
+    }
+
+    function closeContactModal() {
+      document.getElementById('contactModal').classList.remove('active');
+    }
+
+    function openGroupModal() {
+      document.getElementById('groupForm').reset();
+      document.getElementById('groupModal').classList.add('active');
+    }
+
+    function closeGroupModal() {
+      document.getElementById('groupModal').classList.remove('active');
+    }
+
+    async function openSubscribeModal() {
+      if (!selectedGroupId) return;
+      document.getElementById('subscribeForm').reset();
+      
+      // Populate select dropdown with global contacts directory
+      const select = document.getElementById('subEmail');
+      select.innerHTML = '<option value="">-- Select a Contact --</option>';
+      
+      try {
+        const response = await fetch('/api/contacts?limit=100');
+        const data = await response.json();
+        const contacts = data.data?.contacts || [];
+        
+        if (contacts.length === 0) {
+          showToast('error', 'Please create at least one Contact globally in the Contacts Directory first.');
+          return;
+        }
+
+        contacts.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.email;
+          opt.textContent = `${c.email} (${c.firstName || ''} ${c.lastName || ''})`.trim();
+          select.appendChild(opt);
+        });
+
+        document.getElementById('subscribeModal').classList.add('active');
+      } catch (err) {
+        showToast('error', 'Failed to retrieve contacts list: ' + err.message);
+      }
+    }
+
+    function closeSubscribeModal() {
+      document.getElementById('subscribeModal').classList.remove('active');
+    }
+
+    // API calls: Global Contacts
+    async function loadContacts() {
+      const search = document.getElementById('contactSearch').value.trim();
+      const query = search ? `?search=${encodeURIComponent(search)}` : '';
+      
+      try {
+        const response = await fetch(`/api/contacts${query}`);
+        const result = await response.json();
+        const contacts = result.data?.contacts || [];
+        
+        const tbody = document.getElementById('contactsTableBody');
+        tbody.innerHTML = '';
+
+        if (contacts.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No contacts found in the directory.</td></tr>';
+          return;
+        }
+
+        contacts.forEach(c => {
+          const tr = document.createElement('tr');
+          
+          const tdEmail = document.createElement('td');
+          tdEmail.textContent = c.email;
+          tdEmail.setAttribute('style', 'font-weight: 500;');
+          tr.appendChild(tdEmail);
+
+          const tdName = document.createElement('td');
+          tdName.textContent = `${c.firstName || ''} ${c.lastName || ''}`.trim() || '-';
+          tr.appendChild(tdName);
+
+          const tdStatus = document.createElement('td');
+          const span = document.createElement('span');
+          span.className = `status-badge status-${c.globalStatus || 'active'}`;
+          span.textContent = c.globalStatus || 'active';
+          tdStatus.appendChild(span);
+          tr.appendChild(tdStatus);
+
+          const tdActions = document.createElement('td');
+          tdActions.innerHTML = `
+            <button class="btn-small btn-primary" style="margin-right: 6px; padding: 4px 8px; font-size: 11px;" onclick="openContactModal('${c.email}', '${c.firstName || ''}', '${c.lastName || ''}', '${c.phone || ''}', '${c.globalStatus || 'active'}')">Edit</button>
+            <button class="btn-small btn-danger-outline" style="padding: 4px 8px; font-size: 11px;" onclick="deleteContact('${c.email}')">Delete</button>
+          `;
+          tr.appendChild(tdActions);
+
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        document.getElementById('contactsTableBody').innerHTML = `<tr><td colspan="4" class="empty-state" style="color: #f87171;">Failed to load contacts: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function saveContact(e) {
+      e.preventDefault();
+      const payload = {
+        email: document.getElementById('contactEmail').value.trim(),
+        firstName: document.getElementById('contactFirstName').value.trim(),
+        lastName: document.getElementById('contactLastName').value.trim(),
+        phone: document.getElementById('contactPhone').value.trim(),
+        globalStatus: document.getElementById('contactStatus').value,
+        consentMethod: document.getElementById('contactConsentMethod').value,
+        consentProof: document.getElementById('contactConsentProof').value.trim(),
+      };
+
+      try {
+        const response = await fetch('/api/contacts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+
+        if (response.ok) {
+          showToast('success', 'Contact saved successfully globally in the directory!');
+          closeContactModal();
+          loadContacts();
+          // Reload subscribers if we have an active selection
+          if (selectedGroupId) {
+            loadSubscribers(selectedGroupId, selectedGroupName);
+          }
+        } else {
+          showToast('error', result.error || 'Failed to save contact.');
+        }
+      } catch (err) {
+        showToast('error', 'Request failed: ' + err.message);
+      }
+    }
+
+    async function deleteContact(email) {
+      if (!confirm(`Are you sure you want to delete contact '${email}' globally? This will also remove all their subscription list memberships.`)) return;
+
+      try {
+        const response = await fetch(`/api/contacts/${encodeURIComponent(email)}`, {
+          method: 'DELETE'
+        });
+        const result = await response.json();
+
+        if (response.ok) {
+          showToast('success', 'Contact successfully deleted globally.');
+          loadContacts();
+          if (selectedGroupId) {
+            loadSubscribers(selectedGroupId, selectedGroupName);
+          }
+        } else {
+          showToast('error', result.error || 'Failed to delete contact.');
+        }
+      } catch (err) {
+        showToast('error', 'Request failed: ' + err.message);
+      }
+    }
+
+    // API calls: Subscription Groups
+    async function loadGroups() {
+      try {
+        const response = await fetch('/api/groups');
+        const result = await response.json();
+        const groups = result.data?.groups || [];
+        
+        const tbody = document.getElementById('groupsTableBody');
+        tbody.innerHTML = '';
+
+        if (groups.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="2" class="empty-state">No subscription groups found. Create one to start testing!</td></tr>';
+          return;
+        }
+
+        groups.forEach(g => {
+          const tr = document.createElement('tr');
+          tr.className = 'clickable-row';
+          tr.dataset.id = g.groupId;
+          tr.dataset.name = g.name;
+          tr.onclick = () => selectGroup(tr, g.groupId, g.name);
+
+          const tdName = document.createElement('td');
+          tdName.textContent = g.name;
+          tdName.setAttribute('style', 'font-weight: 600;');
+          tr.appendChild(tdName);
+
+          const tdId = document.createElement('td');
+          tdId.textContent = g.groupId;
+          tdId.setAttribute('style', 'color: #9ca3af; font-family: monospace; font-size: 11px;');
+          tr.appendChild(tdId);
+
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        document.getElementById('groupsTableBody').innerHTML = `<tr><td colspan="2" class="empty-state" style="color: #f87171;">Failed to load groups: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function saveGroup(e) {
+      e.preventDefault();
+      const payload = {
+        name: document.getElementById('groupName').value.trim(),
+        description: document.getElementById('groupDescription').value.trim()
+      };
+
+      try {
+        const response = await fetch('/api/groups', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+
+        if (response.ok) {
+          showToast('success', `Subscription group '${payload.name}' created!`);
+          closeGroupModal();
+          loadGroups();
+        } else {
+          showToast('error', result.error || 'Failed to create subscription group.');
+        }
+      } catch (err) {
+        showToast('error', 'Request failed: ' + err.message);
+      }
+    }
+
+    // Selected Group actions
+    function selectGroup(trElement, groupId, groupName) {
+      // Clear active row highlight styles
+      const rows = document.querySelectorAll('#groupsTableBody tr');
+      rows.forEach(r => r.classList.remove('active-row'));
+
+      // Highlight clicked row
+      trElement.classList.add('active-row');
+
+      selectedGroupId = groupId;
+      selectedGroupName = groupName;
+
+      // Update Subtitle and Title
+      document.getElementById('selectedGroupTitle').textContent = `Subscribers: ${groupName}`;
+      document.getElementById('selectedGroupSubtitle').textContent = `Displaying membership entries inside group '${groupId}'`;
+      document.getElementById('addSubscriberBtn').classList.remove('hidden');
+
+      loadSubscribers(groupId, groupName);
+    }
+
+    // API calls: Group Subscribers
+    async function loadSubscribers(groupId, groupName) {
+      try {
+        const tbody = document.getElementById('subscribersTableBody');
+        tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Loading subscribers...</td></tr>';
+
+        const response = await fetch(`/api/groups/${groupId}/subscribers`);
+        const result = await response.json();
+        const subscribers = result.data?.subscribers || [];
+
+        tbody.innerHTML = '';
+
+        if (subscribers.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="3" class="empty-state">No contacts subscribed to this group list segment yet.</td></tr>';
+          return;
+        }
+
+        subscribers.forEach(sub => {
+          const tr = document.createElement('tr');
+
+          const tdEmail = document.createElement('td');
+          tdEmail.textContent = sub.email;
+          tdEmail.setAttribute('style', 'font-weight: 500;');
+          tr.appendChild(tdEmail);
+
+          const tdStatus = document.createElement('td');
+          const span = document.createElement('span');
+          span.className = `status-badge status-${sub.isActive ? 'active' : 'unsubscribed'}`;
+          span.textContent = sub.isActive ? 'active' : 'unsubscribed';
+          tdStatus.appendChild(span);
+          tr.appendChild(tdStatus);
+
+          const tdActions = document.createElement('td');
+          tdActions.innerHTML = `
+            <button class="btn-small btn-danger-outline" style="padding: 4px 8px; font-size: 11px;" onclick="removeSubscriber('${sub.email}')">Unsubscribe/Remove</button>
+          `;
+          tr.appendChild(tdActions);
+
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        document.getElementById('subscribersTableBody').innerHTML = `<tr><td colspan="3" class="empty-state" style="color: #f87171;">Failed to load subscribers: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function saveSubscriber(e) {
+      e.preventDefault();
+      if (!selectedGroupId) return;
+
+      const payload = {
+        email: document.getElementById('subEmail').value,
+        isActive: document.getElementById('subIsActive').checked,
+        consentMethod: document.getElementById('subConsentMethod').value,
+        consentProof: document.getElementById('subConsentProof').value.trim()
+      };
+
+      if (!payload.email) {
+        showToast('error', 'Please select a contact from the dropdown.');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/groups/${selectedGroupId}/subscribers`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+
+        if (response.ok) {
+          showToast('success', `Successfully subscribed '${payload.email}' to group list!`);
+          closeSubscribeModal();
+          loadSubscribers(selectedGroupId, selectedGroupName);
+        } else {
+          showToast('error', result.error || 'Failed to subscribe contact.');
+        }
+      } catch (err) {
+        showToast('error', 'Request failed: ' + err.message);
+      }
+    }
+
+    async function removeSubscriber(email) {
+      if (!selectedGroupId) return;
+      if (!confirm(`Are you sure you want to remove '${email}' from this subscription group? (Their global Contact record will be kept).`)) return;
+
+      try {
+        const response = await fetch(`/api/groups/${selectedGroupId}/subscribers/${encodeURIComponent(email)}`, {
+          method: 'DELETE'
+        });
+        const result = await response.json();
+
+        if (response.ok) {
+          showToast('success', 'Successfully removed subscriber from group.');
+          loadSubscribers(selectedGroupId, selectedGroupName);
+        } else {
+          showToast('error', result.error || 'Failed to remove subscriber.');
+        }
+      } catch (err) {
+        showToast('error', 'Request failed: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>
