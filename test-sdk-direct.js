@@ -62,7 +62,7 @@ async function runTests() {
       lastName: 'Runner',
       globalStatus: 'active',
       consentMethod: 'implicit_api',
-      consentProof: 'Local SDK Direct script test'
+      consentDetails: 'Local SDK Direct script test'
     });
     console.log('Create contact success! Result:', JSON.stringify(createRes));
 
@@ -104,7 +104,7 @@ async function runTests() {
       email,
       isActive: true,
       consentMethod: 'implicit_api',
-      consentProof: 'Local SDK Direct script test'
+      consentDetails: 'Local SDK Direct script test'
     });
     console.log('Add subscriber success! Status:', subRes.data?.subscriber?.isActive);
 

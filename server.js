@@ -173,7 +173,7 @@ app.get('/api/contacts/:email', async (req, res) => {
 app.post('/api/contacts', async (req, res) => {
   try {
     const client = getWebSetupClient();
-    const { email, firstName, lastName, phone, globalStatus, consentMethod, consentProof, metadata } = req.body;
+    const { email, firstName, lastName, phone, globalStatus, consentMethod, consentDetails, customFields } = req.body;
     if (!email || !isValidEmail(email)) {
       return res.status(400).json({ error: 'Invalid or missing email address.' });
     }
@@ -185,8 +185,8 @@ app.post('/api/contacts', async (req, res) => {
       ...(phone !== undefined && { phone }),
       ...(globalStatus !== undefined && { globalStatus }),
       ...(consentMethod !== undefined && { consentMethod }),
-      ...(consentProof !== undefined && { consentProof }),
-      ...(metadata !== undefined && { metadata })
+      ...(consentDetails !== undefined && { consentDetails }),
+      ...(customFields !== undefined && { customFields })
     });
     return res.status(200).json(response);
   } catch (error) {
@@ -289,7 +289,7 @@ app.post('/api/groups/:groupId/subscribers', async (req, res) => {
   try {
     const client = getWebSetupClient();
     const { groupId } = req.params;
-    const { email, isActive, consentMethod, consentProof } = req.body;
+    const { email, isActive, consentMethod, consentDetails } = req.body;
     if (!email || !isValidEmail(email)) {
       return res.status(400).json({ error: 'Invalid or missing email address.' });
     }
@@ -298,7 +298,7 @@ app.post('/api/groups/:groupId/subscribers', async (req, res) => {
       email,
       isActive: isActive !== false,
       ...(consentMethod && { consentMethod }),
-      ...(consentProof && { consentProof })
+      ...(consentDetails && { consentDetails })
     });
     return res.status(201).json(response);
   } catch (error) {

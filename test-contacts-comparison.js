@@ -111,7 +111,7 @@ async function runComparison() {
       lastName: 'User',
       globalStatus: 'active',
       consentMethod: 'implicit_api',
-      consentProof: 'Raw HTTP test'
+      consentDetails: 'Raw HTTP test'
     });
     
     console.log(`[Node SDK] Creating contact: ${sdkEmail}`);
@@ -121,7 +121,7 @@ async function runComparison() {
       lastName: 'User',
       globalStatus: 'active',
       consentMethod: 'implicit_api',
-      consentProof: 'SDK client test'
+      consentDetails: 'SDK client test'
     });
 
     console.log('\nResponse structure comparison (Create Contact):');
@@ -213,7 +213,7 @@ async function runComparison() {
       email: rawEmail,
       isActive: true,
       consentMethod: 'implicit_api',
-      consentProof: 'Raw HTTP sub'
+      consentDetails: 'Raw HTTP sub'
     });
 
     console.log(`[Node SDK] Subscribing ${sdkEmail} to group ${sdkGroupId}`);
@@ -222,7 +222,7 @@ async function runComparison() {
       email: sdkEmail,
       isActive: true,
       consentMethod: 'implicit_api',
-      consentProof: 'SDK sub'
+      consentDetails: 'SDK sub'
     });
 
     console.log('\nResponse structure comparison (Add Subscriber):');

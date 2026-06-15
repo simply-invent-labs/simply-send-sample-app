@@ -94,7 +94,7 @@ async function runExhaustiveTests() {
       lastName: 'Positive',
       globalStatus: 'active',
       consentMethod: 'implicit_api',
-      consentProof: 'Manual integration test runner'
+      consentDetails: 'Manual integration test runner'
     });
     assert(createRes.success === true, 'contacts.createContact() returns success: true');
     assert(createRes.data?.contact?.email === email, 'Created contact contains correct email');
@@ -113,7 +113,7 @@ async function runExhaustiveTests() {
       firstName: 'Exhaustive-Updated',
       lastName: 'Positive-Updated',
       globalStatus: 'unsubscribed',
-      metadata: { customField: 'test-value' }
+      customFields: { customField: 'test-value' }
     });
     assert(updateRes.success === true, 'contacts.updateContact() returns success: true');
 
@@ -122,7 +122,7 @@ async function runExhaustiveTests() {
     const getModRes = await client.contacts.getContact(contactIdentifier);
     assert(getModRes.data?.contact?.firstName === 'Exhaustive-Updated', 'Updated first name matches');
     assert(getModRes.data?.contact?.globalStatus === 'unsubscribed', 'Updated status is unsubscribed');
-    assert(getModRes.data?.contact?.metadata?.customField === 'test-value', 'Updated metadata is correct');
+    assert(getModRes.data?.contact?.customFields?.customField === 'test-value', 'Updated customFields is correct');
 
     // 5. List contacts
     console.log('1.5 Listing contacts from directory...');
@@ -296,7 +296,7 @@ async function runExhaustiveTests() {
       email,
       isActive: true,
       consentMethod: 'implicit_api',
-      consentProof: 'Manual integration test runner subscriber'
+      consentDetails: 'Manual integration test runner subscriber'
     });
     assert(addSubRes.success === true, 'contacts.addSubscriber() returns success: true');
     assert(addSubRes.data?.subscriber?.isActive === true, 'Subscriber isActive field is true');
@@ -319,7 +319,7 @@ async function runExhaustiveTests() {
     console.log('5.4 Updating subscriber status to inactive via contacts.updateSubscriber()...');
     const updateSubRes = await client.contacts.updateSubscriber(groupId, contactIdentifier, {
       isActive: false,
-      consentProof: 'Updated manual integration test runner subscriber'
+      consentDetails: 'Updated manual integration test runner subscriber'
     });
     assert(updateSubRes.success === true, 'contacts.updateSubscriber() returns success: true');
 

@@ -398,8 +398,8 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="contactConsentProof">Consent Proof Details <span class="required-star">*</span></label>
-            <input type="text" id="contactConsentProof" placeholder="API registration trigger" required value="Sandbox Web UI Submission">
+            <label for="contactConsentDetails">Consent Details <span class="required-star">*</span></label>
+            <input type="text" id="contactConsentDetails" placeholder="API registration trigger" required value="Sandbox Web UI Submission">
           </div>
         </div>
         <button type="submit" class="submit-button">Save Contact</button>
@@ -454,8 +454,8 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="subConsentProof">Consent Proof</label>
-            <input type="text" id="subConsentProof" value="Subscription join request" placeholder="Checkbox verified">
+            <label for="subConsentDetails">Consent Details</label>
+            <input type="text" id="subConsentDetails" value="Subscription join request" placeholder="Checkbox verified">
           </div>
         </div>
         <div class="form-group checkbox-group">
@@ -630,7 +630,7 @@
         phone: document.getElementById('contactPhone').value.trim(),
         globalStatus: document.getElementById('contactStatus').value,
         consentMethod: document.getElementById('contactConsentMethod').value,
-        consentProof: document.getElementById('contactConsentProof').value.trim(),
+        consentDetails: document.getElementById('contactConsentDetails').value.trim(),
       };
 
       try {
@@ -819,7 +819,7 @@
         email: document.getElementById('subEmail').value,
         isActive: document.getElementById('subIsActive').checked,
         consentMethod: document.getElementById('subConsentMethod').value,
-        consentProof: document.getElementById('subConsentProof').value.trim()
+        consentDetails: document.getElementById('subConsentDetails').value.trim()
       };
 
       if (!payload.email) {
