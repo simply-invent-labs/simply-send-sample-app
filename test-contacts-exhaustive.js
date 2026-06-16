@@ -78,7 +78,7 @@ async function runExhaustiveTests() {
   
   const groupName = `Exhaustive Group ${uniqueId}`;
   const updatedGroupName = `Exhaustive Group Mod ${uniqueId}`;
-  let groupId = null;
+  let subscriptionGroupId = null;
 
   try {
     // =========================================================================
@@ -222,18 +222,18 @@ async function runExhaustiveTests() {
       description: 'Exhaustive positive group description'
     });
     assert(createGroupRes.success === true, 'contacts.createSubscriberGroup() returns success: true');
-    groupId = createGroupRes.data?.group?.groupId;
-    assert(typeof groupId === 'string', 'Created group returns a valid groupId string');
+    subscriptionGroupId = createGroupRes.data?.group?.subscriptionGroupId;
+    assert(typeof subscriptionGroupId === 'string', 'Created group returns a valid subscriptionGroupId string');
 
     // 2. Fetch created group details
-    console.log(`3.2 Querying group details (groupId: ${groupId})...`);
-    const getGroupRes = await client.contacts.getSubscriberGroup(groupId);
+    console.log(`3.2 Querying group details (subscriptionGroupId: ${subscriptionGroupId})...`);
+    const getGroupRes = await client.contacts.getSubscriberGroup(subscriptionGroupId);
     assert(getGroupRes.success === true, 'contacts.getSubscriberGroup() returns success: true');
     assert(getGroupRes.data?.group?.name === groupName, 'Queried group has correct name');
 
     // 3. Update group properties
     console.log('3.3 Updating group details...');
-    const updateGroupRes = await client.contacts.updateSubscriberGroup(groupId, {
+    const updateGroupRes = await client.contacts.updateSubscriberGroup(subscriptionGroupId, {
       name: updatedGroupName,
       description: 'Modified exhaustive group description'
     });
@@ -241,7 +241,7 @@ async function runExhaustiveTests() {
 
     // 4. Verify group updates
     console.log('3.4 Querying updated group details...');
-    const getGroupModRes = await client.contacts.getSubscriberGroup(groupId);
+    const getGroupModRes = await client.contacts.getSubscriberGroup(subscriptionGroupId);
     assert(getGroupModRes.data?.group?.name === updatedGroupName, 'Updated group name matches');
     assert(getGroupModRes.data?.group?.description === 'Modified exhaustive group description', 'Updated group description matches');
 
@@ -250,7 +250,7 @@ async function runExhaustiveTests() {
     const listGroupsRes = await client.contacts.listSubscriberGroups();
     assert(listGroupsRes.success === true, 'contacts.listSubscriberGroups() returns success: true');
     assert(Array.isArray(listGroupsRes.data?.groups), 'contacts.listSubscriberGroups() returns an array in data.groups');
-    const groupFound = listGroupsRes.data?.groups?.some(g => g.groupId === groupId);
+    const groupFound = listGroupsRes.data?.groups?.some(g => g.subscriptionGroupId === subscriptionGroupId);
     assert(groupFound === true, 'Created group is present in the listed groups');
 
     // =========================================================================
@@ -291,7 +291,7 @@ async function runExhaustiveTests() {
 
     // 1. Subscribe contact to group
     console.log(`5.1 Subscribing contact ${email} to group ${updatedGroupName}...`);
-    const addSubRes = await client.contacts.addSubscriber(groupId, {
+    const addSubRes = await client.contacts.addSubscriber(subscriptionGroupId, {
       contactIdentifier,
       email,
       isActive: true,
@@ -303,13 +303,13 @@ async function runExhaustiveTests() {
 
     // 2. Fetch subscriber details
     console.log('5.2 Querying subscriber details...');
-    const getSubRes = await client.contacts.getSubscriber(groupId, contactIdentifier);
+    const getSubRes = await client.contacts.getSubscriber(subscriptionGroupId, contactIdentifier);
     assert(getSubRes.success === true, 'contacts.getSubscriber() returns success: true');
     assert(getSubRes.data?.email === email, 'Subscriber record contains correct email');
 
     // 3. List subscribers in group
     console.log('5.3 Listing subscribers in the group...');
-    const listSubRes = await client.contacts.listSubscribers(groupId, { limit: 5 });
+    const listSubRes = await client.contacts.listSubscribers(subscriptionGroupId, { limit: 5 });
     assert(listSubRes.success === true, 'contacts.listSubscribers() returns success: true');
     assert(listSubRes.data?.subscribers?.length > 0, 'Subscribers list is not empty');
     const subFound = listSubRes.data?.subscribers?.some(s => s.contactIdentifier === contactIdentifier);
@@ -317,7 +317,7 @@ async function runExhaustiveTests() {
 
     // 4. Update subscriber consent/status (PATCH)
     console.log('5.4 Updating subscriber status to inactive via contacts.updateSubscriber()...');
-    const updateSubRes = await client.contacts.updateSubscriber(groupId, contactIdentifier, {
+    const updateSubRes = await client.contacts.updateSubscriber(subscriptionGroupId, contactIdentifier, {
       isActive: false,
       consentDetails: 'Updated manual integration test runner subscriber'
     });
@@ -325,12 +325,12 @@ async function runExhaustiveTests() {
 
     // 5. Verify subscriber updates
     console.log('5.5 Verifying subscriber inactivation...');
-    const getSubModRes = await client.contacts.getSubscriber(groupId, contactIdentifier);
+    const getSubModRes = await client.contacts.getSubscriber(subscriptionGroupId, contactIdentifier);
     assert(getSubModRes.data?.isActive === false, 'Subscriber status updated to false');
 
     // 6. Delete subscriber from group (unsubscribe)
     console.log('5.6 Deleting subscriber from group (unsubscribing)...');
-    const deleteSubRes = await client.contacts.deleteSubscriber(groupId, contactIdentifier);
+    const deleteSubRes = await client.contacts.deleteSubscriber(subscriptionGroupId, contactIdentifier);
     assert(deleteSubRes.success === true, 'contacts.deleteSubscriber() returns success: true');
 
     // =========================================================================
@@ -341,7 +341,7 @@ async function runExhaustiveTests() {
     // 1. Fetch deleted subscriber details (should return 404)
     console.log('6.1 Querying deleted subscriber (should return 404)...');
     try {
-      await client.contacts.getSubscriber(groupId, contactIdentifier);
+      await client.contacts.getSubscriber(subscriptionGroupId, contactIdentifier);
       assert(false, 'contacts.getSubscriber() for deleted subscriber should have failed');
     } catch (err) {
       if (err instanceof SimplySendHttpError) {
@@ -373,7 +373,7 @@ async function runExhaustiveTests() {
     const nonexistentIdentifier = getContactIdentifier(nonexistentEmail);
     console.log(`6.3 Subscribing non-existent directory contact (${nonexistentEmail}) to group (should return 404)...`);
     try {
-      await client.contacts.addSubscriber(groupId, {
+      await client.contacts.addSubscriber(subscriptionGroupId, {
         contactIdentifier: nonexistentIdentifier,
         email: nonexistentEmail,
         isActive: true,
@@ -396,9 +396,9 @@ async function runExhaustiveTests() {
     console.log('\n--- SECTION 7: Cleanup & Post-Cleanup Verification ---');
 
     // 1. Delete subscription group
-    if (groupId) {
-      console.log(`7.1 Deleting subscription group (groupId: ${groupId})...`);
-      const deleteGroupRes = await client.contacts.deleteSubscriberGroup(groupId);
+    if (subscriptionGroupId) {
+      console.log(`7.1 Deleting subscription group (subscriptionGroupId: ${subscriptionGroupId})...`);
+      const deleteGroupRes = await client.contacts.deleteSubscriberGroup(subscriptionGroupId);
       assert(deleteGroupRes.success === true, 'contacts.deleteSubscriberGroup() returns success: true');
 
       // Verify deletion
@@ -406,7 +406,7 @@ async function runExhaustiveTests() {
       let deleted = false;
       for (let attempt = 1; attempt <= 10; attempt++) {
         try {
-          const checkGroup = await client.contacts.getSubscriberGroup(groupId);
+          const checkGroup = await client.contacts.getSubscriberGroup(subscriptionGroupId);
           console.log(`    [Poll #${attempt}] Group still exists (status: ${checkGroup.data?.group?.importStatus || 'none'}). Waiting 1s...`);
           await new Promise(resolve => setTimeout(resolve, 1000));
         } catch (err) {

@@ -1,6 +1,6 @@
 {
   "name": "simply-send-sample-app",
-  "version": "3.2.0",
+  "version": "3.4.0",
   "description": "Sample application demonstrating the usage of the simplysend Node.js SDK",
   "type": "module",
   "main": "server.js",
@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "express": "^5.2.1",
-    "simplysend": "^3.2.0"
+    "simplysend": "^3.4.0"
   },
   "private": true
 }

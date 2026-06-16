@@ -471,7 +471,7 @@
 
   <script>
     // Selected states
-    let selectedGroupId = null;
+    let selectedSubscriptionGroupId = null;
     let selectedGroupName = '';
 
     // Page Load initializer
@@ -536,7 +536,7 @@
     }
 
     async function openSubscribeModal() {
-      if (!selectedGroupId) return;
+      if (!selectedSubscriptionGroupId) return;
       document.getElementById('subscribeForm').reset();
       
       // Populate select dropdown with global contacts directory
@@ -646,8 +646,8 @@
           closeContactModal();
           loadContacts();
           // Reload subscribers if we have an active selection
-          if (selectedGroupId) {
-            loadSubscribers(selectedGroupId, selectedGroupName);
+          if (selectedSubscriptionGroupId) {
+            loadSubscribers(selectedSubscriptionGroupId, selectedGroupName);
           }
         } else {
           showToast('error', result.error || 'Failed to save contact.');
@@ -669,8 +669,8 @@
         if (response.ok) {
           showToast('success', 'Contact successfully deleted globally.');
           loadContacts();
-          if (selectedGroupId) {
-            loadSubscribers(selectedGroupId, selectedGroupName);
+          if (selectedSubscriptionGroupId) {
+            loadSubscribers(selectedSubscriptionGroupId, selectedGroupName);
           }
         } else {
           showToast('error', result.error || 'Failed to delete contact.');
@@ -698,9 +698,9 @@
         groups.forEach(g => {
           const tr = document.createElement('tr');
           tr.className = 'clickable-row';
-          tr.dataset.id = g.groupId;
+          tr.dataset.id = g.subscriptionGroupId;
           tr.dataset.name = g.name;
-          tr.onclick = () => selectGroup(tr, g.groupId, g.name);
+          tr.onclick = () => selectGroup(tr, g.subscriptionGroupId, g.name);
 
           const tdName = document.createElement('td');
           tdName.textContent = g.name;
@@ -708,7 +708,7 @@
           tr.appendChild(tdName);
 
           const tdId = document.createElement('td');
-          tdId.textContent = g.groupId;
+          tdId.textContent = g.subscriptionGroupId;
           tdId.setAttribute('style', 'color: #9ca3af; font-family: monospace; font-size: 11px;');
           tr.appendChild(tdId);
 
@@ -747,7 +747,7 @@
     }
 
     // Selected Group actions
-    function selectGroup(trElement, groupId, groupName) {
+    function selectGroup(trElement, subscriptionGroupId, groupName) {
       // Clear active row highlight styles
       const rows = document.querySelectorAll('#groupsTableBody tr');
       rows.forEach(r => r.classList.remove('active-row'));
@@ -755,24 +755,24 @@
       // Highlight clicked row
       trElement.classList.add('active-row');
 
-      selectedGroupId = groupId;
+      selectedSubscriptionGroupId = subscriptionGroupId;
       selectedGroupName = groupName;
 
       // Update Subtitle and Title
       document.getElementById('selectedGroupTitle').textContent = `Subscribers: ${groupName}`;
-      document.getElementById('selectedGroupSubtitle').textContent = `Displaying membership entries inside group '${groupId}'`;
+      document.getElementById('selectedGroupSubtitle').textContent = `Displaying membership entries inside group '${subscriptionGroupId}'`;
       document.getElementById('addSubscriberBtn').classList.remove('hidden');
 
-      loadSubscribers(groupId, groupName);
+      loadSubscribers(subscriptionGroupId, groupName);
     }
 
     // API calls: Group Subscribers
-    async function loadSubscribers(groupId, groupName) {
+    async function loadSubscribers(subscriptionGroupId, groupName) {
       try {
         const tbody = document.getElementById('subscribersTableBody');
         tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Loading subscribers...</td></tr>';
 
-        const response = await fetch(`/api/groups/${groupId}/subscribers`);
+        const response = await fetch(`/api/groups/${subscriptionGroupId}/subscribers`);
         const result = await response.json();
         const subscribers = result.data?.subscribers || [];
 
@@ -813,7 +813,7 @@
 
     async function saveSubscriber(e) {
       e.preventDefault();
-      if (!selectedGroupId) return;
+      if (!selectedSubscriptionGroupId) return;
 
       const payload = {
         email: document.getElementById('subEmail').value,
@@ -828,7 +828,7 @@
       }
 
       try {
-        const response = await fetch(`/api/groups/${selectedGroupId}/subscribers`, {
+        const response = await fetch(`/api/groups/${selectedSubscriptionGroupId}/subscribers`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -838,7 +838,7 @@
         if (response.ok) {
           showToast('success', `Successfully subscribed '${payload.email}' to group list!`);
           closeSubscribeModal();
-          loadSubscribers(selectedGroupId, selectedGroupName);
+          loadSubscribers(selectedSubscriptionGroupId, selectedGroupName);
         } else {
           showToast('error', result.error || 'Failed to subscribe contact.');
         }
@@ -848,18 +848,18 @@
     }
 
     async function removeSubscriber(email) {
-      if (!selectedGroupId) return;
+      if (!selectedSubscriptionGroupId) return;
       if (!confirm(`Are you sure you want to remove '${email}' from this subscription group? (Their global Contact record will be kept).`)) return;
 
       try {
-        const response = await fetch(`/api/groups/${selectedGroupId}/subscribers/${encodeURIComponent(email)}`, {
+        const response = await fetch(`/api/groups/${selectedSubscriptionGroupId}/subscribers/${encodeURIComponent(email)}`, {
           method: 'DELETE'
         });
         const result = await response.json();
 
         if (response.ok) {
           showToast('success', 'Successfully removed subscriber from group.');
-          loadSubscribers(selectedGroupId, selectedGroupName);
+          loadSubscribers(selectedSubscriptionGroupId, selectedGroupName);
         } else {
           showToast('error', result.error || 'Failed to remove subscriber.');
         }

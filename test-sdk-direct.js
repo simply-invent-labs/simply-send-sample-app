@@ -84,22 +84,22 @@ async function runTests() {
     console.log('List groups success! Count:', groupsList.data?.groups?.length || 0);
     
     // Find or create test group
-    let groupId = groupsList.data?.groups?.[0]?.groupId;
-    if (!groupId) {
+    let subscriptionGroupId = groupsList.data?.groups?.[0]?.subscriptionGroupId;
+    if (!subscriptionGroupId) {
       console.log('\n--- 5. Creating test subscription group ---');
       const groupRes = await client.contacts.createSubscriberGroup({
         name: 'SDK Test Group Direct',
         description: 'Created by direct SDK test script'
       });
-      groupId = groupRes.data?.group?.groupId;
-      console.log('Group created! ID:', groupId);
+      subscriptionGroupId = groupRes.data?.group?.subscriptionGroupId;
+      console.log('Group created! ID:', subscriptionGroupId);
     } else {
-      console.log('Using existing group ID:', groupId);
+      console.log('Using existing group ID:', subscriptionGroupId);
     }
 
     // 6. Add Subscriber to group
     console.log('\n--- 6. Subscribing contact to group ---');
-    const subRes = await client.contacts.addSubscriber(groupId, {
+    const subRes = await client.contacts.addSubscriber(subscriptionGroupId, {
       contactIdentifier,
       email,
       isActive: true,
@@ -110,7 +110,7 @@ async function runTests() {
 
     // 7. Delete subscriber from group
     console.log('\n--- 7. Unsubscribing contact from group ---');
-    const unsubRes = await client.contacts.deleteSubscriber(groupId, contactIdentifier);
+    const unsubRes = await client.contacts.deleteSubscriber(subscriptionGroupId, contactIdentifier);
     console.log('Delete subscriber success! Result:', JSON.stringify(unsubRes));
 
     // 8. Delete contact

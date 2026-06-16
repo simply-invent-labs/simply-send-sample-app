@@ -261,12 +261,12 @@ app.post('/api/groups', async (req, res) => {
 /**
  * Endpoints for Subscribers (Group Memberships)
  */
-app.get('/api/groups/:groupId/subscribers', async (req, res) => {
+app.get('/api/groups/:subscriptionGroupId/subscribers', async (req, res) => {
   try {
     const client = getWebSetupClient();
-    const { groupId } = req.params;
+    const { subscriptionGroupId } = req.params;
     const { limit, search, isActive, lastKey } = req.query;
-    const response = await client.contacts.listSubscribers(groupId, {
+    const response = await client.contacts.listSubscribers(subscriptionGroupId, {
       ...(limit && { limit: parseInt(limit) }),
       ...(search && { search }),
       ...(isActive !== undefined && { isActive }),
@@ -285,16 +285,16 @@ app.get('/api/groups/:groupId/subscribers', async (req, res) => {
   }
 });
 
-app.post('/api/groups/:groupId/subscribers', async (req, res) => {
+app.post('/api/groups/:subscriptionGroupId/subscribers', async (req, res) => {
   try {
     const client = getWebSetupClient();
-    const { groupId } = req.params;
+    const { subscriptionGroupId } = req.params;
     const { email, isActive, consentMethod, consentDetails } = req.body;
     if (!email || !isValidEmail(email)) {
       return res.status(400).json({ error: 'Invalid or missing email address.' });
     }
     const contactIdentifier = getContactIdentifier(email);
-    const response = await client.contacts.addSubscriber(groupId, contactIdentifier, {
+    const response = await client.contacts.addSubscriber(subscriptionGroupId, contactIdentifier, {
       email,
       isActive: isActive !== false,
       ...(consentMethod && { consentMethod }),
@@ -313,12 +313,12 @@ app.post('/api/groups/:groupId/subscribers', async (req, res) => {
   }
 });
 
-app.delete('/api/groups/:groupId/subscribers/:email', async (req, res) => {
+app.delete('/api/groups/:subscriptionGroupId/subscribers/:email', async (req, res) => {
   try {
     const client = getWebSetupClient();
-    const { groupId, email } = req.params;
+    const { subscriptionGroupId, email } = req.params;
     const contactIdentifier = getContactIdentifier(email);
-    const response = await client.contacts.deleteSubscriber(groupId, contactIdentifier);
+    const response = await client.contacts.deleteSubscriber(subscriptionGroupId, contactIdentifier);
     return res.status(200).json(response);
   } catch (error) {
     console.error('Delete subscriber failed:', error);

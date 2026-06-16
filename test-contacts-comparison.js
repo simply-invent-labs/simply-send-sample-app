@@ -199,16 +199,16 @@ async function runComparison() {
     );
     console.log(`  👉 Group payload schema matches: ${groupStructMatch ? '✅ YES' : '❌ NO'}`);
 
-    const rawGroupId = rawGroup.data?.data?.group?.groupId;
-    const sdkGroupId = sdkGroup.data?.group?.groupId;
+    const rawSubscriptionGroupId = rawGroup.data?.data?.group?.subscriptionGroupId;
+    const sdkSubscriptionGroupId = sdkGroup.data?.group?.subscriptionGroupId;
 
     // -------------------------------------------------------------------------
     // TEST 5: ADD SUBSCRIBER
     // -------------------------------------------------------------------------
     console.log('\n--- 5. Testing Subscriptions (Add) ---');
 
-    console.log(`[RAW API] Subscribing ${rawEmail} to group ${rawGroupId}`);
-    const rawSub = await makeRawRequest(`contacts/subscription-groups/${rawGroupId}/subscriptions`, 'POST', {
+    console.log(`[RAW API] Subscribing ${rawEmail} to group ${rawSubscriptionGroupId}`);
+    const rawSub = await makeRawRequest(`contacts/subscription-groups/${rawSubscriptionGroupId}/subscriptions`, 'POST', {
       contactIdentifier: rawIdentifier,
       email: rawEmail,
       isActive: true,
@@ -216,8 +216,8 @@ async function runComparison() {
       consentDetails: 'Raw HTTP sub'
     });
 
-    console.log(`[Node SDK] Subscribing ${sdkEmail} to group ${sdkGroupId}`);
-    const sdkSub = await sdkClient.contacts.addSubscriber(sdkGroupId, {
+    console.log(`[Node SDK] Subscribing ${sdkEmail} to group ${sdkSubscriptionGroupId}`);
+    const sdkSub = await sdkClient.contacts.addSubscriber(sdkSubscriptionGroupId, {
       contactIdentifier: sdkIdentifier,
       email: sdkEmail,
       isActive: true,
@@ -242,15 +242,15 @@ async function runComparison() {
     
     // Delete memberships
     console.log('[RAW API] Unsubscribing raw contact...');
-    await makeRawRequest(`contacts/subscription-groups/${rawGroupId}/subscriptions/${rawIdentifier}`, 'DELETE');
+    await makeRawRequest(`contacts/subscription-groups/${rawSubscriptionGroupId}/subscriptions/${rawIdentifier}`, 'DELETE');
     console.log('[Node SDK] Unsubscribing sdk contact...');
-    await sdkClient.contacts.deleteSubscriber(sdkGroupId, sdkIdentifier);
+    await sdkClient.contacts.deleteSubscriber(sdkSubscriptionGroupId, sdkIdentifier);
 
     // Delete groups
     console.log('[RAW API] Deleting raw group...');
-    await makeRawRequest(`contacts/subscription-groups/${rawGroupId}`, 'DELETE');
+    await makeRawRequest(`contacts/subscription-groups/${rawSubscriptionGroupId}`, 'DELETE');
     console.log('[Node SDK] Deleting sdk group...');
-    await sdkClient.contacts.deleteSubscriberGroup(sdkGroupId);
+    await sdkClient.contacts.deleteSubscriberGroup(sdkSubscriptionGroupId);
 
     // Delete contacts
     console.log('[RAW API] Deleting raw contact...');
