@@ -425,7 +425,7 @@ app.post('/api/send/marketing', async (req, res) => {
       to,
       subject,
       html,
-      subscriptionGroupId,
+      ...(subscriptionGroupId && { subscriptionGroupId }),
       ...(text && { text }),
       ...(enableClickTracking !== undefined && { enableClickTracking })
     });
