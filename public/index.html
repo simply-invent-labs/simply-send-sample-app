@@ -85,6 +85,12 @@ This is a test transactional email sent via the SimplySend Node.js SDK.</textare
               <span>Enable Click Redirection Tracking</span>
             </label>
           </div>
+          <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="enableOpenTracking">
+              <span>Enable Open Tracking Pixel</span>
+            </label>
+          </div>
         </div>
 
         <button type="submit" id="submitBtn" class="submit-button">
@@ -132,7 +138,8 @@ This is a test transactional email sent via the SimplySend Node.js SDK.</textare
         html: document.getElementById('html').value.trim(),
         text: document.getElementById('text').value.trim(),
         replyTo: document.getElementById('replyTo').value.trim(),
-        enableClickTracking: document.getElementById('enableClickTracking').checked
+        enableClickTracking: document.getElementById('enableClickTracking').checked,
+        enableOpenTracking: document.getElementById('enableOpenTracking').checked
       };
 
       try {

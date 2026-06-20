@@ -85,6 +85,12 @@ Check out our latest campaign updates from SimplySend.</textarea>
               <span>Enable Click Redirection Tracking</span>
             </label>
           </div>
+          <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="enableOpenTracking">
+              <span>Enable Open Tracking Pixel</span>
+            </label>
+          </div>
         </div>
 
         <button type="submit" id="submitBtn" class="submit-button btn-marketing">
@@ -132,7 +138,8 @@ Check out our latest campaign updates from SimplySend.</textarea>
         html: document.getElementById('html').value.trim(),
         subscriptionGroupId: document.getElementById('subscriptionGroupId').value.trim(),
         text: document.getElementById('text').value.trim(),
-        enableClickTracking: document.getElementById('enableClickTracking').checked
+        enableClickTracking: document.getElementById('enableClickTracking').checked,
+        enableOpenTracking: document.getElementById('enableOpenTracking').checked
       };
 
       try {

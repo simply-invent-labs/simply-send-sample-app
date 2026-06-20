@@ -336,7 +336,7 @@ app.delete('/api/groups/:subscriptionGroupId/subscribers/:email', async (req, re
  * Endpoint to send Transactional Emails (tapi)
  */
 app.post('/api/send/transactional', async (req, res) => {
-  const { from, to, subject, html, text, replyTo, enableClickTracking } = req.body;
+  const { from, to, subject, html, text, replyTo, enableClickTracking, enableOpenTracking } = req.body;
 
   const resolvedAccountId = process.env.SIMPLYSEND_ACCOUNT_ID;
   const resolvedTapi = process.env.SIMPLYSEND_TAPI_KEY;
@@ -369,7 +369,8 @@ app.post('/api/send/transactional', async (req, res) => {
       html,
       ...(text && { text }),
       ...(replyTo && { replyTo }),
-      ...(enableClickTracking !== undefined && { enableClickTracking })
+      ...(enableClickTracking !== undefined && { enableClickTracking }),
+      ...(enableOpenTracking !== undefined && { enableOpenTracking })
     });
 
     return res.status(200).json({ success: true, messageId: response.data?.messageId });
@@ -394,7 +395,7 @@ app.post('/api/send/transactional', async (req, res) => {
  * Endpoint to send Marketing Emails (mapi)
  */
 app.post('/api/send/marketing', async (req, res) => {
-  const { from, to, subject, html, subscriptionGroupId, text, enableClickTracking } = req.body;
+  const { from, to, subject, html, subscriptionGroupId, text, enableClickTracking, enableOpenTracking } = req.body;
 
   const resolvedAccountId = process.env.SIMPLYSEND_ACCOUNT_ID;
   const resolvedMapi = process.env.SIMPLYSEND_MAPI_KEY;
@@ -427,7 +428,8 @@ app.post('/api/send/marketing', async (req, res) => {
       html,
       ...(subscriptionGroupId && { subscriptionGroupId }),
       ...(text && { text }),
-      ...(enableClickTracking !== undefined && { enableClickTracking })
+      ...(enableClickTracking !== undefined && { enableClickTracking }),
+      ...(enableOpenTracking !== undefined && { enableOpenTracking })
     });
 
     return res.status(200).json({ success: true, messageId: response.data?.messageId });
