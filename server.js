@@ -333,6 +333,69 @@ app.delete('/api/groups/:subscriptionGroupId/subscribers/:email', async (req, re
 });
 
 /**
+ * Endpoints for Compliance Templates
+ */
+app.get('/api/compliance-templates', async (req, res) => {
+  try {
+    const client = getWebSetupClient();
+    const { type } = req.query;
+    const response = await client.complianceTemplates.list(type || undefined);
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error('List compliance templates failed:', error);
+    if (error instanceof SimplySendValidationError) {
+      return res.status(400).json({ error: `Validation Error (${error.field}): ${error.message}` });
+    }
+    if (error instanceof SimplySendHttpError) {
+      return res.status(error.statusCode).json({ error: error.message, reasonCode: error.reasonCode, details: error.data });
+    }
+    return res.status(500).json({ error: error.message || 'Internal server error.' });
+  }
+});
+
+app.post('/api/compliance-templates', async (req, res) => {
+  try {
+    const client = getWebSetupClient();
+    const { name, type, htmlContent } = req.body;
+    if (!name || !type || htmlContent === undefined) {
+      return res.status(400).json({ error: 'Missing required fields: name, type, htmlContent' });
+    }
+    if (!['unsubscribe', 'report_abuse', 'company_address'].includes(type)) {
+      return res.status(400).json({ error: "Invalid type. Must be 'unsubscribe', 'report_abuse', or 'company_address'" });
+    }
+    const response = await client.complianceTemplates.create({ name, type, htmlContent });
+    return res.status(201).json(response);
+  } catch (error) {
+    console.error('Create compliance template failed:', error);
+    if (error instanceof SimplySendValidationError) {
+      return res.status(400).json({ error: `Validation Error (${error.field}): ${error.message}` });
+    }
+    if (error instanceof SimplySendHttpError) {
+      return res.status(error.statusCode).json({ error: error.message, reasonCode: error.reasonCode, details: error.data });
+    }
+    return res.status(500).json({ error: error.message || 'Internal server error.' });
+  }
+});
+
+app.delete('/api/compliance-templates/:templateId', async (req, res) => {
+  try {
+    const client = getWebSetupClient();
+    const { templateId } = req.params;
+    const response = await client.complianceTemplates.delete(templateId);
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error('Delete compliance template failed:', error);
+    if (error instanceof SimplySendValidationError) {
+      return res.status(400).json({ error: `Validation Error (${error.field}): ${error.message}` });
+    }
+    if (error instanceof SimplySendHttpError) {
+      return res.status(error.statusCode).json({ error: error.message, reasonCode: error.reasonCode, details: error.data });
+    }
+    return res.status(500).json({ error: error.message || 'Internal server error.' });
+  }
+});
+
+/**
  * Endpoint to send Transactional Emails (tapi)
  */
 app.post('/api/send/transactional', async (req, res) => {
